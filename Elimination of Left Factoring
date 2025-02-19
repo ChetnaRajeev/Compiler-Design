@@ -1,0 +1,80 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_PRODUCTIONS 10
+#define MAX_LENGTH 50
+
+// Function to find the longest common prefix among all productions
+void findCommonPrefix(char productions[MAX_PRODUCTIONS][MAX_LENGTH], int count, char commonPrefix[MAX_LENGTH]) {
+    if (count == 0) return;
+
+    strcpy(commonPrefix, productions[0]);
+
+    for (int i = 1; i < count; i++) {
+        int j = 0;
+        while (commonPrefix[j] && productions[i][j] && commonPrefix[j] == productions[i][j]) {
+            j++;
+        }
+        commonPrefix[j] = '\0'; // Terminate common prefix
+    }
+}
+
+int main() {
+    char input[MAX_LENGTH], productions[MAX_PRODUCTIONS][MAX_LENGTH], commonPrefix[MAX_LENGTH];
+    char newProduction[MAX_PRODUCTIONS][MAX_LENGTH];
+    int count = 0;
+
+    printf("Enter the Production (A->X|Y|Z): ");
+    fgets(input, sizeof(input), stdin);
+    
+    // Remove newline character if present
+    input[strcspn(input, "\n")] = '\0';
+
+    // Ensure input starts with "A->"
+    if (strncmp(input, "A->", 3) != 0) {
+        printf("Invalid format! Use A->X|Y|Z\n");
+        return 1;
+    }
+
+    // Extract productions after "A->"
+    char *token = strtok(input + 3, "|");
+    while (token != NULL && count < MAX_PRODUCTIONS) {
+        strcpy(productions[count++], token);
+        token = strtok(NULL, "|");
+    }
+
+    // Find the common prefix
+    findCommonPrefix(productions, count, commonPrefix);
+    
+    // If no common prefix, return original production
+    if (strlen(commonPrefix) == 0) {
+        printf("No left factoring needed. Production remains: \nA->");
+        for (int i = 0; i < count; i++) {
+            printf("%s", productions[i]);
+            if (i < count - 1) printf("|");
+        }
+        printf("\n");
+        return 0;
+    }
+
+    // Construct the new production rules
+    int newCount = 0;
+    for (int i = 0; i < count; i++) {
+        if (strncmp(productions[i], commonPrefix, strlen(commonPrefix)) == 0) {
+            strcpy(newProduction[newCount++], productions[i] + strlen(commonPrefix));
+        }
+    }
+
+    // Print the left-factored grammar
+    printf("\nGrammar Without Left Factoring:\n");
+    printf("A -> %sX\n", commonPrefix);
+    
+    printf("X -> ");
+    for (int i = 0; i < newCount; i++) {
+        printf("%s", newProduction[i][0] ? newProduction[i] : "ε");
+        if (i < newCount - 1) printf("|");
+    }
+    printf("\n");
+
+    return 0;
+}
