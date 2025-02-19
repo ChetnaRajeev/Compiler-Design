@@ -1,0 +1,56 @@
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char input[100], l[10], r[100], temp[50], productions[25][50];
+    int i = 0, j = 0, flag = 0, consumed = 0;
+
+    // Input: Read grammar in form "A->alpha|beta"
+    printf("Enter the production (e.g., A->Aa|b): ");
+    scanf("%s", input);
+
+    // Extract LHS (left-hand side) and RHS (right-hand side)
+    char *arrow = strstr(input, "->");
+    if (arrow == NULL) {
+        printf("Invalid production format!\n");
+        return 1;
+    }
+
+    // Copy LHS
+    strncpy(l, input, arrow - input);
+    l[arrow - input] = '\0';
+
+    // Copy RHS
+    strcpy(r, arrow + 2);
+
+    char non_recursive_part[50] = ""; // Store non-left-recursive productions
+
+    // Process each production separated by '|'
+    while (sscanf(r + consumed, "%[^|]", temp) == 1 && consumed <= strlen(r)) {
+        if (temp[0] == l[0]) {  // Left-recursive case
+            flag = 1;
+            sprintf(productions[i++], "%s'->%s%s'", l, temp + 1, l);
+        } else {  // Non-left-recursive case
+            if (strlen(non_recursive_part) > 0) {
+                strcat(non_recursive_part, "|");
+            }
+            strcat(non_recursive_part, temp);
+        }
+        consumed += strlen(temp) + 1; // Move to next production
+    }
+
+    // Print the result
+    if (flag == 1) {
+        // First production should have all non-left-recursive terms
+        sprintf(productions[i++], "%s->%s%s'", l, non_recursive_part, l);
+        sprintf(productions[i++], "%s'->epsilon", l); // Add epsilon production
+
+        printf("\nThe productions after eliminating Left Recursion are:\n");
+        for (j = 0; j < i; j++)
+            printf("%s\n", productions[j]);
+    } else {
+        printf("\nThe Given Grammar has no Left Recursion.\n");
+    }
+
+    return 0;
+}
