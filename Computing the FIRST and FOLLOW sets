@@ -1,0 +1,147 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define SIZE 10
+
+char productions[SIZE][SIZE];
+char first[SIZE][SIZE];
+char follow[SIZE][SIZE];
+int n;
+
+void findFirst(int i, int j);
+void findFollow(int i);
+int isNonTerminal(char c);
+void addToResultSet(char* result, char val);
+
+int main() {
+    int i, j;
+    char temp;
+
+    printf("Enter the number of productions: ");
+    scanf("%d", &n);
+
+    printf("Enter the productions:\n");
+    for (i = 0; i < n; i++) {
+        scanf("%s", productions[i]);
+    }
+
+    // Initialize first and follow sets
+    for (i = 0; i < n; i++) {
+        first[i][0] = '\0';
+        follow[i][0] = '\0';
+    }
+
+    // Compute FIRST sets
+    for (i = 0; i < n; i++) {
+        findFirst(i, 0);
+    }
+
+    // Compute FOLLOW sets
+    // Add $ to FOLLOW of start symbol
+    addToResultSet(follow[0], '$');
+    for (i = 0; i < n; i++) {
+        findFollow(i);
+    }
+
+    // Print FIRST sets
+    printf("\nFIRST sets:\n");
+    for (i = 0; i < n; i++) {
+        printf("FIRST(%c) = { ", productions[i][0]);
+        for (j = 0; first[i][j] != '\0'; j++) {
+            printf("%c ", first[i][j]);
+        }
+        printf("}\n");
+    }
+
+    // Print FOLLOW sets
+    printf("\nFOLLOW sets:\n");
+    for (i = 0; i < n; i++) {
+        printf("FOLLOW(%c) = { ", productions[i][0]);
+        for (j = 0; follow[i][j] != '\0'; j++) {
+            printf("%c ", follow[i][j]);
+        }
+        printf("}\n");
+    }
+
+    return 0;
+}
+
+int isNonTerminal(char c) {
+    return isupper(c);
+}
+
+// Function to add a symbol to result set if it's not already present
+void addToResultSet(char* result, char val) {
+    int i;
+    for (i = 0; result[i] != '\0'; i++) {
+        if (result[i] == val)
+            return; // Already present
+    }
+    result[i] = val;
+    result[i + 1] = '\0';
+}
+
+void findFirst(int i, int j) {
+    char symbol = productions[i][3 + j]; // Production starts after "A->"
+
+    // If symbol is terminal, add to FIRST
+    if (!isNonTerminal(symbol)) {
+        addToResultSet(first[i], symbol);
+    } else {
+        // If symbol is non-terminal, compute FIRST of that non-terminal
+        for (int k = 0; k < n; k++) {
+            if (productions[k][0] == symbol) {
+                if (productions[k][3] == '#') { // Epsilon production
+                    findFirst(i, j + 1); // Check next symbol
+                } else {
+                    findFirst(k, 0);
+                    for (int m = 0; first[k][m] != '\0'; m++) {
+                        addToResultSet(first[i], first[k][m]);
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Function to compute FOLLOW set
+void findFollow(int i) {
+    char symbol = productions[i][0]; // Non-terminal
+
+    for (int j = 0; j < n; j++) { // For all productions
+        for (int k = 3; productions[j][k] != '\0'; k++) {
+            if (productions[j][k] == symbol) { // Found symbol in RHS
+                if (productions[j][k + 1] != '\0') { // If not at end
+                    char nextSymbol = productions[j][k + 1];
+
+                    if (!isNonTerminal(nextSymbol)) {
+                        addToResultSet(follow[i], nextSymbol); // Terminal
+                    } else {
+                        // Add FIRST of next non-terminal to FOLLOW
+                        for (int m = 0; m < n; m++) {
+                            if (productions[m][0] == nextSymbol) {
+                                for (int p = 0; first[m][p] != '\0'; p++) {
+                                    if (first[m][p] != '#') // Ignore epsilon
+                                        addToResultSet(follow[i], first[m][p]);
+                                }
+                            }
+                        }
+                    }
+                } else if (productions[j][0] != symbol) {
+                    // If symbol is at end, add FOLLOW of LHS non-terminal
+                    int index;
+                    for (index = 0; index < n; index++) {
+                        if (productions[index][0] == productions[j][0])
+                            break;
+                    }
+                    findFollow(index);
+                    for (int p = 0; follow[index][p] != '\0'; p++) {
+                        addToResultSet(follow[i], follow[index][p]);
+                    }
+                }
+            }
+        }
+    }
+}
