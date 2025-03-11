@@ -1,0 +1,46 @@
+//Flex program to implement a lexical analyzer
+%{
+#include<stdio.h>
+#include<string.h>
+int token_no=1;
+int line_no=1;
+%}
+
+%%
+/* Keyword Argument */
+"int"|"char"|"float"|"main"|"if"|"else"|"for"|"while"|"break"|"printf"|"continue"|"return"|"void" {printf("%d\t%d\tKeyword\t\t%s\n",token_no++,line_no,yytext);}
+
+/* Identifier Argument */
+[a-zA-Z_][a-zA-Z0-9_]* {printf("%d\t%d\tIdentifier\t\t%s\n",token_no++,line_no,yytext);}
+
+/* Constant */
+[0-9]+ {printf("%d\t%d\tConstant\t\t%s\n",token_no++,line_no,yytext);}
+
+/* Brackets */
+"("|")"|"{"|"}"|"["|"]" {printf("%d\t%d\tBrackets\t\t%s\n",token_no++,line_no,yytext);}
+
+/* Special Symbols */
+","|";"|"*"|"+"|"-" {printf("%d\t%d\tSpecial Symbols\t\t%s\n",token_no++,line_no,yytext);}
+
+/* New Line */
+\n {line_no++;}
+
+/* Spaces and Tab Spaces to be Ignored */
+[\t ] ;
+
+/* Unknown Character */
+. {printf("%d\t%d\tUnknown\t\t%s\n",token_no++,line_no,yytext);}
+%%
+
+int yywrap() {return 1;}
+
+int main() {
+printf("Token_No\tLine_no\tToken\t\tLexeme\n");
+
+/* Declare yyin definition */
+extern FILE *yyin;
+/* Use fopen to put txt file into input stream */
+yyin = fopen("sample_input.txt", "r");
+yylex();
+return 0;
+}
