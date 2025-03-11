@@ -1,0 +1,31 @@
+//flex program to calculate total number of upper and lower case letters
+%{
+int uppercase_count = 0;
+int lowercase_count = 0;
+%}
+
+%%
+[A-Z] { 
+    printf("Uppercase Letter: %s\n", yytext); 
+    uppercase_count++;  program to 
+}
+[a-z] { 
+    printf("Lowercase Letter: %s\n", yytext); 
+    lowercase_count++; 
+}
+.|\n { 
+    /* Ignore other characters */ 
+}
+%%
+
+int yywrap() {
+    return 1;  // End of input
+}
+
+int main() {
+    printf("Enter text (Ctrl+D to end):\n");
+    yylex();  // Start Lex processing
+    printf("\nTotal Uppercase Letters: %d\n", uppercase_count);
+    printf("Total Lowercase Letters: %d\n", lowercase_count);
+    return 0;
+}
